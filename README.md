@@ -15,4 +15,10 @@ Zestimate for NFTs
 
 
 ## Project Structure
-As this project will require various cloud resources (lambda functions and a database), as well as a 
+As this project will require various cloud resources (lambda functions and a database), as well as a frontend, so the idea is to break each piece into its own folder. Upon changes to lambda functions, each will be redeployed at the same time using cloudformation.
+
+- `.circleci`: Holds config for ci/cd pipeline
+- `cloud`: Holds all Cloudformation resources
+- `ddl`: Holds the database definition
+- `events`: Where events that are shared across services live
+- `lambda`: Holds each lambda function to be deployed. Each  sub directory is a lambda function.
