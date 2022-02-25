@@ -1,0 +1,24 @@
+{
+  "name": "neftimate",
+  "version": "1.0.0",
+  "description": "An nft pricing engine",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.5.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --build --clean",
+    "clean": "rm -rf lib lambda/lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charlessy11/Neftimate.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/charlessy11/Neftimate/issues"
+  },
+  "homepage": "https://github.com/charlessy11/Neftimate#readme"
+}
