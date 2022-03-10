@@ -2,7 +2,11 @@
   "name": "neftimate",
   "version": "1.0.0",
   "description": "An nft pricing engine",
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "knex": "^1.0.3",
+    "pg": "^8.7.3"
+  },
   "devDependencies": {
     "typescript": "^4.5.5"
   },
