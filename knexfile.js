@@ -10,13 +10,14 @@ module.exports = {
     client: 'pg',
     connection: {
       host : '127.0.0.1',
-      port : 3306,
-      user : 'root',
-      password : 'password',
+      port : 5432,
+      user : require("os").userInfo().username,
+      password : '',
       database : 'neftimate'
     },
     migrations: {
       directory: './store/migrations',
+      tableName: 'migrations',
     },
     seeds: {
       directory: './store/seeds'

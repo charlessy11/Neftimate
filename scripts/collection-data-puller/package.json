@@ -1,7 +1,7 @@
 {
-  "name": "opensea-data-poller",
+  "name": "collection-data-puller",
   "version": "1.0.0",
-  "description": "",
+  "description": "Pulls collection data from opensea",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
