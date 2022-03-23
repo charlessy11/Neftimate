@@ -11,8 +11,8 @@ Zestimate for NFTs
 1. Install postgres.app or brew install postgres
 1. Make sure your postgres server is running, if not run `pg_ctl -D /usr/local/var/postgres start`
 1. Create local database via `createdb neftimate`
-1. e
-
+1. Use a database client like postico or pgadmin and use info in `knexfile.js` to populate connection info
+1. After successfully connecting client, run `npm run migrate` and ensure tables are create correctly
 
 ## Scripts
 (Ran via `npm run <command>` at project root)

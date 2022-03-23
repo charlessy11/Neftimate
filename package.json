@@ -8,14 +8,19 @@
     "pg": "^8.7.3"
   },
   "devDependencies": {
+    "@types/knex": "^0.16.1",
+    "@types/node": "^17.0.21",
     "typescript": "^4.5.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --build --clean",
-    "clean": "rm -rf lib lambda/lib",
+    "build": "tsc --build",
+    "clean": "rm -rf lib ./lambda/*/lib ./scripts/*/lib",
     "migrate": "knex migrate:latest"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/charlessy11/Neftimate.git"

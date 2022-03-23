@@ -99,9 +99,9 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "references": [
-    { "path": "./lambda/src/ml-model-builder/" },
-    { "path": "./lambda/src/opensea-data-poller"},
-    { "path": "./lambda/src/price-predictor" },
+    { "path": "./lambda/ml-model-builder/" },
+    { "path": "./lambda/opensea-data-poller/" },
+    { "path": "./lambda/price-predictor" },
+    { "path": "./scripts/collection-data-poller" },
   ]
 }
-
