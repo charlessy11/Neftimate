@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "An nft pricing engine",
   "dependencies": {
+    "axios": "^0.21.1",
     "dotenv": "^16.0.0",
     "knex": "^1.0.3",
     "pg": "^8.7.3"
