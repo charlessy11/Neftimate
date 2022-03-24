@@ -16,7 +16,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --build",
     "clean": "rm -rf lib ./lambda/*/lib ./scripts/*/lib",
-    "migrate": "knex migrate:latest"
+    "migrate": "knex migrate:latest",
+    "preadd-collection": "npm run build",
+    "add-collection": "node scripts/collection-data-poller/lib/index.js"
   },
   "workspaces": [
     "packages/*"
