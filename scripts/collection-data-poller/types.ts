@@ -7,7 +7,7 @@ interface Collection {
     traits: Array<Object>
     slug: string
     contract_address: string
-    img_url: string
+    image_url: string
 }
 
 
@@ -18,5 +18,5 @@ interface Asset {
     listing_date: Date
     name: string 
     rarity_score: number
-    img_url: string
+    image_url: string
 }
