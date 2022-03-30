@@ -3,20 +3,25 @@
   "version": "1.0.0",
   "description": "An nft pricing engine",
   "dependencies": {
+    "axios": "^0.21.1",
     "dotenv": "^16.0.0",
     "knex": "^1.0.3",
-    "pg": "^8.7.3"
+    "pg": "^8.7.3",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/knex": "^0.16.1",
     "@types/node": "^17.0.21",
+    "@types/uuid": "^8.3.4",
     "typescript": "^4.5.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --build",
     "clean": "rm -rf lib ./lambda/*/lib ./scripts/*/lib",
-    "migrate": "knex migrate:latest"
+    "migrate": "knex migrate:latest",
+    "preadd-collection": "npm run build",
+    "add-collection": "node scripts/collection-data-poller/lib/index.js"
   },
   "workspaces": [
     "packages/*"
