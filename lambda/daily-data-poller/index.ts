@@ -3,9 +3,9 @@
 // import 'dotenv/config'
 // import db from './db'
 
-// const { 
-//     OPENSEA_API_KEY,
-// } = process.env;
+const { 
+    OPENSEA_API_KEY,
+} = process.env;
 
 // // Runs once a day to import transaction data for each asset of a collection
 
@@ -80,9 +80,9 @@ import axios from 'axios';
 
 export const handler = async () => {
     try {
-        const url = 'https://www.target.com.au/ws-api/v1/target/products/search?category=W95362';
+        const url = 'https://api.opensea.io/api/v1/events?collection_slug=the-crypto-chicks';
 
-        const response = await axios.get(url, { timeout: 10000 });
+        const response = await axios.get(url, { timeout: 10000, headers: {'x-api-key': OPENSEA_API_KEY, 'user-agent': 'PostmanRuntime/7.28.0', 'Accept': 'application/json', 'authority': 'api.opensea.io' } });
         console.log(typeof (response));
         console.log(response);
 
