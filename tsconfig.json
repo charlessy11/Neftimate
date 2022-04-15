@@ -100,7 +100,7 @@
   },
   "references": [
     { "path": "./lambda/ml-model-builder/" },
-    { "path": "./lambda/opensea-data-poller/" },
+    { "path": "./lambda/daily-data-poller/" },
     { "path": "./lambda/price-predictor" },
     { "path": "./scripts/collection-data-poller" },
   ]

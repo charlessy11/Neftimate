@@ -1,5 +1,5 @@
 {
-  "name": "opensea-data-poller",
+  "name": "daily-data-poller",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93"
+  }
 }
