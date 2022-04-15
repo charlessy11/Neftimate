@@ -19,7 +19,10 @@ Zestimate for NFTs
 
 - `build` - Builds typescript into javascript 
 - `clean` - Removes compiled javascript in `lib/` folders
-
+- `dev:pull-transaction-data` - Pulls transaction data locally
+- `prod:add-collection` - Adds collection data to prod database
+- `dev:add-collection` - Adds collection data to local database
+- `migrate` - Creates a new migration file
 
 ## Project Structure
 As this project will require various cloud resources (lambda functions and a database), as well as a frontend, so the idea is to break each piece into its own folder. Upon changes to lambda functions, each will be redeployed at the same time using cloudformation.
