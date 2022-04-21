@@ -19,3 +19,11 @@ interface Asset {
     rarity_score: number
     img_url: string
 }
+
+interface RarityScore {
+    token: number
+    rarity_score: number
+    rarity_rank: number
+
+    
+}

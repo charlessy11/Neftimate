@@ -1,17 +1,22 @@
 import axios from 'axios'
+import { assert } from 'console';
+import { setDefaultResultOrder } from 'dns';
 import 'dotenv/config'
 import db from './db'
 
 const { 
     COLLECTION_SLUG, 
     OPENSEA_API_KEY,
+    POSTMAN_API_KEY
 } = process.env;
+
 
 // Endpoints for get calls (either collection or assets)
 const endpoints = [
     `https://api.opensea.io/api/v1/collection/${COLLECTION_SLUG}`, 
     `https://api.opensea.io/api/v1/assets?collection_slug=${COLLECTION_SLUG}&limit=50`,
 ]
+
 
 // Retrieves the initial data (collection and assets) from OpenSea 
 const getOpenseaData = (cursor = null) => {
@@ -34,6 +39,9 @@ const getOpenseaData = (cursor = null) => {
 const parseAssets = (assets : Array<any>, collection_address: string): Array<Asset> | null => {
 
     if (!assets) throw new Error('Error: Assets are null')
+
+    // let i = 0;
+    // const ASSET_NUM = getAssetNum(assets[i++].name)
 
     return assets.map(asset => ({
             id : asset.id,
@@ -63,6 +71,33 @@ const parseCollection = (collection : any): Collection | null => {
     }
 }
 
+const getAssetNum = function(asset_name: string){
+
+    const asset_num = asset_name.match("\d");
+
+    return asset_num;
+}
+
+const getRarityScore = function(asset_num: any){
+    if(!asset_num) throw new Error('Error: Asset Number is null')
+
+    const config = {
+        headers: {
+            'user-agent':	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'
+        }
+    }
+
+    axios.get(`https://api.traitsniper.com/api/projects/crypto-chicks/nfts?token=1234`, config)
+    .then(response => {
+        console.log(response.data)
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+}
+
+
 // Inserts collections data into collections table
 const insertCollection = async (collection: Collection) => {
     await db("collections").insert(collection);
@@ -75,71 +110,74 @@ const insertAssets = async (assets: Array<Asset>) => {
 
 // Driver
 (async () => {
+    // let data: any;
 
-    let data: any;
-
-    // Gets initial data from opensea
-    try {
-        data = await getOpenseaData();
-    } catch (error){
-        console.error("Error getting opensea data: ", error);
-        return;
-    }
+    // // Gets initial data from opensea
+    // try {
+    //     data = await getOpenseaData();
+    // } catch (error){
+    //     console.error("Error getting opensea data: ", error);
+    //     return;
+    // }
     
 
-    // Parses collection data
-    const collection = parseCollection(data[0].data.collection)
-    if (collection?.address == null){
-        console.log("Error parsing collection address, stopping...")
-        return;
-    }
+    // // Parses collection data
+    // const collection = parseCollection(data[0].data.collection)
+    // if (collection?.address == null){
+    //     console.log("Error parsing collection address, stopping...")
+    //     return;
+    // }
     
-    // Inserts collection data, if we get pkey conflict, just continue
-    try {
-        await insertCollection(collection)
-    } catch (error: any){
-        if (error.code == "23505"){
-            console.log("Collection already imported.")
-        } else {
-            console.log('Error inserting into database: ', error)
-        }
-    } 
+    // // Inserts collection data, if we get pkey conflict, just continue
+    // try {
+    //     await insertCollection(collection)
+    // } catch (error: any){
+    //     if (error.code == "23505"){
+    //         console.log("Collection already imported.")
+    //     } else {
+    //         console.log('Error inserting into database: ', error)
+    //     }
+    // } 
 
-    // Uses cursor to iteratively call opensea /assets endpoint
-    let cursor = data[1].data.next
-    while (cursor != null) {
-        console.log(`Fetching for cursor = ${cursor}`)
+    // // Uses cursor to iteratively call opensea /assets endpoint
+    // let cursor = data[1].data.next
+    // while (cursor != null) {
+    //     console.log(`Fetching for cursor = ${cursor}`)
 
-        // Gets data using cursor
-        try {
-            data = await getOpenseaData(cursor)
-        } catch (error){
-            console.log('Error getting opensea data: ', error)
-            continue;
-        }
+    //     // Gets data using cursor
+    //     try {
+    //         data = await getOpenseaData(cursor)
+    //     } catch (error){
+    //         console.log('Error getting opensea data: ', error)
+    //         continue;
+    //     }
         
-        // Parses assets
-        const assets = parseAssets(data.data.assets, collection?.address)
-        if (!assets){
-            console.log("Error parsing assets")
-            return;
-        }
+    //     // Parses assets
+    //     const assets = parseAssets(data.data.assets, collection?.address)
+        
+    //     if (!assets){
+    //         console.log("Error parsing assets")
+    //         return;
+    //     }
 
-        // Inserts assets into database, if already imported continue
-        try {
-            await insertAssets(assets)
-        } catch (error: any){
-            if (error.code == "23505"){
-                console.log("Assets already imported.")
-            } else {
-                console.log('Error inserting assets into database: ', error)
-            }
+    //     // Inserts assets into database, if already imported continue
+    //     try {
+    //         await insertAssets(assets)
+    //     } catch (error: any){
+    //         if (error.code == "23505"){
+    //             console.log("Assets already imported.")
+    //         } else {
+    //             console.log('Error inserting assets into database: ', error)
+    //         }
             
-        } finally {
-            cursor = data.data.next
-            // await new Promise(r => setTimeout(r, 200)); // Uncomment if ratelimited
-        }
-    }
+    //     } finally {
+    //         cursor = data.data.next
+    //         // await new Promise(r => setTimeout(r, 200)); // Uncomment if ratelimited
+    //     }
+    // }
+
+    getRarityScore(1234);
+
     db.destroy();
     console.log("Completed importing assets")
 
