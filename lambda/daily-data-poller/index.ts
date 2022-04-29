@@ -1,92 +1,135 @@
-// import {Handler} from 'aws-lambda'
-// import axios, { AxiosRequestConfig } from 'axios'
-// import 'dotenv/config'
-// import db from './db'
+// Runs once a day to import transaction data for each asset of a collection
 
-const { 
-    OPENSEA_API_KEY,
-} = process.env;
+import {Handler} from 'aws-lambda'
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import db from './db'
+import 'dotenv/config'
 
-// // Runs once a day to import transaction data for each asset of a collection
+const { OPENSEA_API_KEY } = process.env
 
-// // 1. Get collections in collections table
-// // 2. Make call to opensea using colection_slug=, event_type=successful, occurred_after = (previous day timestamp if no transactions exist with that collection slug)
-// // 3. Page over cursor and insert transactions into db with foreign key reference to assets table
+const getCollectionsFromDb = () => {
+    return db('collections').select('slug', 'last_pulled_transactions_at')
+}
 
+// Inserts sales into database
+const insertSalesIntoDb = (events: Array<ParsedEvent>) => {
+    return db('sales').insert(events)
+}
 
-// const getCollectionsFromDb = () => {
-//     return db('collections').select('slug')
-// }
+// Updates db with when collection last had transactions pulled
+const updateLastUpdatedTime = (slug: string) => {
+    return db('collections').update({'last_pulled_transactions_at': 'now()'}).where('slug', slug)
+}
 
-// const getOpenseaData = async (collectionSlug: string, eventType='successful', occurred_after = null) => {
-//     // var config: AxiosRequestConfig = {
-//     //     method: 'get',
-//     //     url: 'https://api.opensea.io/api/v1/events',
-//     //     headers: { 
-//     //       'x-api-key': OPENSEA_API_KEY, 
-//     //     },
-//     //     params: {
-//     //         collection_slug: 'the-crypto-chicks',
-//     //         event_type: 'successful',
-//     //     }
-//     //   };
+// Constructs axios request
+const getOpenseaData = async (collectionSlug: string, cursor: string, occurred_after: Date, eventType='successful') => {
+    
+    var config: AxiosRequestConfig = {
+        method: 'get',
+        url: 'https://api.opensea.io/api/v1/events',
+        headers: { 
+          'x-api-key': OPENSEA_API_KEY, 
+        },
+        params: {
+            collection_slug: collectionSlug,
+            event_type: eventType,
+            cursor: cursor,
+        }
+      };
 
-//     let response;
+      if (occurred_after){
+        config.params = {
+            ...config.params,
+            occurred_after: occurred_after,
+        }
+      }
+      
+    return axios(config)
+}
 
-//     try {
-//         response = await axios.get('https://api.opensea.io/api/v1/events?collection_slug=the-crypto-chicks', {
-//             headers: {
-//                 'x-api-key': OPENSEA_API_KEY,
-//                 "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-//                 "Access-Control-Allow-Credentials": true
-//             }
-//         })
-//         console.log(response)
-//     } catch (error){
-//         console.log(error)
-//         db.destroy()
-//         console.log("ERROR")
-//     }
-//     return response
-// }
+const parseResponse = (response: AxiosResponse): Array<ParsedEvent> => {
+    return response.data.asset_events.map((event: any) => {
+        if (!event.asset){
+            return;
+        }
 
-// export const handler: Handler = async (event, context) => {
-//     console.log(`EVENT: ${JSON.stringify(event)}`)
+        return {
+            id: event.id,
+            price: getPriceFromDecimal(event.payment_token.decimals, event.total_price),
+            asset_id: event.asset.id,
+            timestamp: event.transaction.timestamp,
+        }
+    })
+}
 
-//     let collections;
-//     let data;
-//     let response;
-
-//     try {
-//         data = await getCollectionsFromDb()
-//         collections = data.map((collection: any) => collection.slug)
-//         console.log(collections)
-//         response = await getOpenseaData(collections[0])
-//         console.log(response)
-//     } catch (error){   
-//         console.error(error);
-//         return;
-//     }
-
-//     // collections.forEach(async (collection: string) => {
-//     //     console.log(`Getting data for ${collection}`)
-        
-//     // })
+// const getParseAndInsertEvents = (slug: string, collection: any) => {
+//     let response: any = getOpenseaData(collection.slug, "", collection.updated_at).then(res => res).catch(console.error)
+//     let cursor = response.data.next
+    
 
 
 // }
 
-import axios from 'axios';
+export const handler: Handler = async (event) => {
+    console.log(`EVENT: ${JSON.stringify(event)}`)
 
-export const handler = async () => {
+    let collections: Array<{slug: string, updated_at: string}>= [];
+    let data;
+
     try {
-        const url = 'https://api.opensea.io/api/v1/events?collection_slug=the-crypto-chicks';
-
-        const response = await axios.get(url, { timeout: 10000, headers: {'x-api-key': OPENSEA_API_KEY, 'user-agent': 'PostmanRuntime/7.28.0', 'Accept': 'application/json', 'authority': 'api.opensea.io' } });
-        console.log(typeof (response));
-        console.log(response);
-
-    } catch (e) {
-        console.log(e, "error api call");
+        data = await getCollectionsFromDb()
+    } catch (error){
+        console.error("ERROR GETTING COLLECTIONS DATA FROM DB", error);
+        return
     }
+    
+    data.forEach((collection: any) => collections.push({
+        slug: collection.slug,
+        updated_at: collection.last_pulled_transactions_at
+    }))
+    
+
+    // build collections promise.all into array of 4, return result
+    collections.forEach(async (collection: any) => {
+        console.log(`Getting data for ${collection.slug}, last updated at ${collection.updated_at}`)
+
+        let response = await getOpenseaData(collection.slug, "", collection.updated_at)
+        let cursor = response.data.next;
+
+        while (cursor != null){
+            try {
+                console.log(`Getting data for ${cursor}`)
+                response = await getOpenseaData(collection.slug, cursor, collection.updated_at)
+                cursor = response.data.next
+            } catch (error){
+                console.error(`ERROR FETCHING DATA FOR ${cursor}, exiting`)
+                db.destroy()
+                break;
+            }
+
+            const parsedEvents = parseResponse(response);
+
+            try {
+                await insertSalesIntoDb(parsedEvents);
+            } catch (error) {
+                console.error(`ERROR INSERTING SALES DATA INTO DB: ${error}`)
+                continue;
+            }
+        }    
+    })
+
+
+    // collections.forEach(async (collection: any) => {
+    //     try {
+    //         await updateLastUpdatedTime(collection.slug)
+    //     } catch (error) {
+    //         console.error(`ERROR UPDATE last_pulled_transactions_at IN DB: ${error}`)
+    //     }    
+    // })
+
+
+}
+
+const getPriceFromDecimal = (decimal: number, price: number) => {
+    return price / (1*10**decimal)
 }
