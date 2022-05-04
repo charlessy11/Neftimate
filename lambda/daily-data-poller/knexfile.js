@@ -31,10 +31,10 @@ module.exports = {
   production: {
     client: 'pg',
     connection: {
-      host : 'neftimate-db.ce38ewtyfywm.us-west-2.rds.amazonaws.com',
+      host : PROD_DB_URL,
       port : 5432,
       user : 'postgres',
-      password : 'neftimator$10',
+      password : PROD_DB_PASSWORD,
       database : 'postgres'
     },
     pool: {
