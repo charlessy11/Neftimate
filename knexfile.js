@@ -1,5 +1,9 @@
 require('dotenv').config();
 
+const {
+  PROD_DB_URL,
+  PROD_DB_PASSWORD
+} = process.env
 
 /**
  * @type { Object.<string, import("knex").Knex.Config> }
@@ -24,24 +28,15 @@ module.exports = {
     }
   },
 
-  staging: {
-    client: 'pg',
-    connection: process.env.STAGING_DB_URL,
-    pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      directory: './store/migrations',
-    },
-    seeds: {
-      directory: './store/seeds'
-    }
-  },
-
   production: {
     client: 'pg',
-    connection: process.env.PROD_DB_URL,
+    connection: {
+      host : PROD_DB_URL,
+      port : 5432,
+      user : 'postgres',
+      password : PROD_DB_PASSWORD,
+      database : 'postgres'
+    },
     pool: {
       min: 2,
       max: 10

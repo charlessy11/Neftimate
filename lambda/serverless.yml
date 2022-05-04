@@ -1,0 +1,20 @@
+service: NeftimateData
+
+frameworkVersion: '3'
+configValidationMode: error
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs14.x
+  profile: neftimate
+  memorySize: 512
+  timeout: 900
+
+
+functions:
+  daily-data-poller:
+    handler: ./daily-data-poller/lib/index.handler
+    events: 
+      - schedule: rate(1 day)
+        
+
