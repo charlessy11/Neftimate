@@ -1,4 +1,3 @@
-// @ts-nocheck
 require('dotenv').config();
 
 const {
@@ -32,10 +31,10 @@ module.exports = {
   production: {
     client: 'pg',
     connection: {
-      host : PROD_DB_URL,
+      host : 'neftimate-db.ce38ewtyfywm.us-west-2.rds.amazonaws.com',
       port : 5432,
       user : 'postgres',
-      password : PROD_DB_PASSWORD,
+      password : 'neftimator$10',
       database : 'postgres'
     },
     pool: {

@@ -4,5 +4,4 @@ interface ParsedEvent {
     asset_id: string;
     transaction_id: string;
     timestamp: Date;
-
 }

@@ -16,13 +16,12 @@ const insertSalesIntoDb = (events: Array<ParsedEvent>) => {
     return db('sales').insert(events)
 }
 
-// Updates db with when collection last had transactions pulled
-const updateLastUpdatedTime = (slug: string) => {
-    return db('collections').update({'last_pulled_transactions_at': 'now()'}).where('slug', slug)
+const getLastSaleTimestamp = () => {
+    return db('sales').select('timestamp').orderBy('timestamp', 'desc').first()
 }
 
 // Constructs axios request
-const getOpenseaData = async (collectionSlug: string, cursor: string, occurred_after: Date, eventType='successful') => {
+const getOpenseaData = async (collectionSlug: string, cursor: string, occurred_after: Date | null, eventType='successful') => {
     
     var config: AxiosRequestConfig = {
         method: 'get',
@@ -43,11 +42,15 @@ const getOpenseaData = async (collectionSlug: string, cursor: string, occurred_a
             occurred_after: occurred_after,
         }
       }
+
       
     return axios(config)
 }
 
+// Parses Axios response into an array of parsed events
 const parseResponse = (response: AxiosResponse): Array<ParsedEvent> => {
+    if (!response) return [];
+
     return response.data.asset_events.map((event: any) => {
         if (!event.asset){
             return;
@@ -62,71 +65,86 @@ const parseResponse = (response: AxiosResponse): Array<ParsedEvent> => {
     })
 }
 
-// const getParseAndInsertEvents = (slug: string, collection: any) => {
-//     let response: any = getOpenseaData(collection.slug, "", collection.updated_at).then(res => res).catch(console.error)
-//     let cursor = response.data.next
-    
-
-
-// }
-
 export const handler: Handler = async (event) => {
-    console.log(`EVENT: ${JSON.stringify(event)}`)
 
-    let collections: Array<{slug: string, updated_at: string}>= [];
-    let data;
+    let collections: Array<{slug: string}> = [];
+    let dbCollections;
+    let dblatestTimestamp: {timestamp: Date};
+    let latestTimestamp: Date | null;
 
+    // Get data from db
     try {
-        data = await getCollectionsFromDb()
+        dbCollections = await getCollectionsFromDb()
+        dblatestTimestamp = await getLastSaleTimestamp();
+        console.log(dblatestTimestamp)
+        latestTimestamp = new Date()
     } catch (error){
-        console.error("ERROR GETTING COLLECTIONS DATA FROM DB", error);
+        console.error("ERROR GETTING COLLECTIONS DATA FROM DB", error)
+        db.destroy()
         return
     }
+
+    latestTimestamp = !dblatestTimestamp ? null : dblatestTimestamp.timestamp
     
-    data.forEach((collection: any) => collections.push({
-        slug: collection.slug,
-        updated_at: collection.last_pulled_transactions_at
+    // Loop over and add collection name to collections array
+    dbCollections.forEach((collection: any) => collections.push({
+        slug: collection.slug
     }))
+
     
-
-    // build collections promise.all into array of 4, return result
+    // Loop over collections, perform functions on each collection
     collections.forEach(async (collection: any) => {
-        console.log(`Getting data for ${collection.slug}, last updated at ${collection.updated_at}`)
+        console.log(`Getting data for ${collection.slug}, last collected data at ${latestTimestamp}`)
 
-        let response = await getOpenseaData(collection.slug, "", collection.updated_at)
-        let cursor = response.data.next;
+        let response, cursor : any;
+        let parsedEvents: Array<ParsedEvent>;
 
-        while (cursor != null){
-            try {
-                console.log(`Getting data for ${cursor}`)
-                response = await getOpenseaData(collection.slug, cursor, collection.updated_at)
-                cursor = response.data.next
-            } catch (error){
-                console.error(`ERROR FETCHING DATA FOR ${cursor}, exiting`)
+        try {
+            response = await getOpenseaData(collection.slug, "", latestTimestamp)
+            parsedEvents = parseResponse(response)
+
+            if (parsedEvents.length == 0){
+                console.log("No events to update")
                 db.destroy()
-                break;
+                return;
             }
 
-            const parsedEvents = parseResponse(response);
-
-            try {
-                await insertSalesIntoDb(parsedEvents);
-            } catch (error) {
-                console.error(`ERROR INSERTING SALES DATA INTO DB: ${error}`)
-                continue;
+            console.log(parsedEvents)
+            await insertSalesIntoDb(parsedEvents)
+            cursor = response.data.next
+        } catch (error: any) {
+            if (error.code == 23505){
+                console.log("Duplicate key, continuing")
+            } else {
+                console.log("ERROR GETTING RESPONSE FROM OPENSEA: ", error)
+                db.destroy()
+                return
             }
-        }    
+        }
+        
+        try {
+            while (cursor != null){
+                response = await getOpenseaData(collection.slug, cursor, latestTimestamp)
+                parsedEvents = parseResponse(response)
+                try {
+                    await insertSalesIntoDb(parsedEvents)
+                } catch (error: any){
+                    if (error.code == 23505){
+                        console.log("Duplicate key, continuing")
+                    } else if (error.code == 23503){
+                        console.log("Sales information for this asset doesn't exist, try updating the assets table")
+                    }
+                }
+                cursor = response.data.next
+            }
+        } catch (error: any) {
+            console.error("Error getting/inserting data into database: ", error)
+            return;
+        } finally {
+            db.destroy()
+            console.log("Done :)")
+        }
     })
-
-
-    // collections.forEach(async (collection: any) => {
-    //     try {
-    //         await updateLastUpdatedTime(collection.slug)
-    //     } catch (error) {
-    //         console.error(`ERROR UPDATE last_pulled_transactions_at IN DB: ${error}`)
-    //     }    
-    // })
-
 
 }
 
