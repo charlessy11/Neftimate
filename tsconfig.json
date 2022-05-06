@@ -103,5 +103,6 @@
     { "path": "./lambda/daily-data-poller/" },
     { "path": "./lambda/price-predictor" },
     { "path": "./scripts/collection-data-poller" },
+    { "path": "./api/" },
   ]
 }
