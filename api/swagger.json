@@ -1,24 +1,176 @@
 {
-    "openapi": "3.1.0",
+    "swagger": "2.0",
     "info": {
+      "description": "An API that allows users to fetch fair market price of NFTs",
+      "version": "1.0.0",
       "title": "Neftimate",
-      "description": "An API to get current market value of NFTs", 
-      "version": "1.0.0"
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
     },
     "host": "localhost:3000",
-    "schemes": ["http", "https"],
     "basePath": "/",
     "tags": [
-        {
-            "name": "Prediction",
-            "description": "Get the price prediction of a specific asset"
-        },
-        {
-            "name": ""
-        }
+      {
+        "name": "Collections",
+        "description": "NFT collection information"
+      },
+      {
+        "name": "Prediction",
+        "description": "Neftimate curated predictions for singular assets"
+      },
+      {
+        "name": "Assets",
+        "description": "NFT Asset information"
+      }
     ],
-
+    "schemes": [
+      "http"
+    ],
     "paths": {
-
+      "/prediction/{asset_id}": {
+        "get": {
+          "tags": [
+            "Prediction"
+          ],
+          "summary": "Get prediction of a specific asset",
+          "description": "Returns the prediction of a particular asset id",
+          "operationId": "addPet",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "asset_id",
+              "description": "An asset id has predictions",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "400": {
+              "description": "No predictions for asset id"
+            }
+          }
+        }
+      },
+      "/collections": {
+        "get": {
+          "tags": [
+            "Collections"
+          ],
+          "summary": "Get all available collections",
+          "description": "Returns all collections that Neftimate has data for",
+          "produces": [
+            "application/json"
+          ]
+        }
+      },
+      "/collections/{slug}": {
+        "get": {
+          "tags": [
+            "Collections"
+          ],
+          "summary": "Get assets in a collection via collection slug",
+          "description": "Returns the assetes within a collection",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "collection_slug",
+              "description": "The slug of the collection",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "description": "Maximum number of assets to return for the collection. Default is 50",
+              "required": false,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "405": {
+              "description": "Limit is a value above 50 or below 0"
+            },
+            "410": {
+              "description": "No collection of slug found"
+            }
+          }
+        }
+      },
+      "/assets": {
+        "get": {
+          "tags": [
+            "Assets"
+          ],
+          "summary": "Get all assets",
+          "description": "Returns all assets according to specified limit",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "description": "Maximum number of assets to return for the collection. Default is 50",
+              "required": false,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "405": {
+              "description": "Limit is a value above 50 or below 0"
+            }
+          }
+        }
+      },
+      "/assets/{id}": {
+        "get": {
+          "tags": [
+            "Assets"
+          ],
+          "summary": "Get specific NFT asset by id",
+          "description": "Returns information of a single asset by its id",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "asset_id",
+              "description": "The asset id of the asset to get data for",
+              "required": true,
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "/assets/{id}/sales": {
+        "get": {
+          "tags": [
+            "Assets"
+          ],
+          "summary": "Get sales history of an asset",
+          "description": "Returns sale history of an individual asset",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "asset_id",
+              "description": "The asset id of the asset to get data for",
+              "required": true,
+              "type": "string"
+            }
+          ]
+        }
+      }
     }
-}
+  }
